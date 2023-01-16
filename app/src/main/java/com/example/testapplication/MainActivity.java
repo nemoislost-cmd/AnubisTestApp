@@ -7,6 +7,7 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.content.Intent;
 
 import com.google.android.material.button.MaterialButton;
 
@@ -20,6 +21,7 @@ public class MainActivity extends AppCompatActivity {
         TextView username = (TextView) findViewById(R.id.username);
         TextView password = (TextView) findViewById(R.id.password);
         MaterialButton loginbutton =(MaterialButton) findViewById(R.id.loginbutton);
+        String displayUser = "Welcome" + username.getText().toString();
 
         // test and test prob change this to a database
 
@@ -33,6 +35,9 @@ public class MainActivity extends AppCompatActivity {
                     int duration = Toast.LENGTH_SHORT;
                     Toast toast = Toast.makeText(context,text,duration);
                     toast.show();
+                    Intent intent = new Intent(getApplicationContext(),SecondScreen.class);
+                    intent.putExtra("message_key",displayUser);
+                    startActivity(intent);
 
                 }else{
                     Context context = MainActivity.this;
