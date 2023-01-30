@@ -79,7 +79,7 @@ public class MainActivity extends AppCompatActivity {
                 outputStream.close();
 
                 //send files
-                File file = new File("path/to/file");
+                File file = new File("raw:/storage/emulated/0/Download/test.txt");
                 byte[] bytes = new byte[(int) file.length()];
                 FileInputStream fis = new FileInputStream(file);
                 BufferedInputStream bis = new BufferedInputStream(fis);

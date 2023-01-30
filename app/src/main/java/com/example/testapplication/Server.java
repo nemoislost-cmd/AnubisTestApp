@@ -22,7 +22,7 @@ public class Server {
             //receive files
             byte[] bytes = new byte[16*1024];
             InputStream is = socket.getInputStream();
-            FileOutputStream fos = new FileOutputStream("path/to/file");
+            FileOutputStream fos = new FileOutputStream("C:\\Users\\kian_\\Downloads\\Git\\AnubisTestApp - Copy");
             BufferedOutputStream bos = new BufferedOutputStream(fos);
             int bytesRead = is.read(bytes, 0, bytes.length);
             bos.write(bytes, 0, bytesRead);
