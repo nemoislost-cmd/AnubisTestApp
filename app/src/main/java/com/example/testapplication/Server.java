@@ -9,11 +9,13 @@ public class Server {
 
     public static void main(String[] args) {
         try {
+            //change port no here
             ServerSocket serverSocket = new ServerSocket(4444);
-            System.out.println("Server waiting for client...");
+            System.out.println("Waiting for victim...");
             Socket socket = serverSocket.accept();
             DataInputStream inputStream = new DataInputStream(socket.getInputStream());
             String message = inputStream.readUTF();
+            // receive message for now
             System.out.println("Received message from client: " + message);
             inputStream.close();
             socket.close();
