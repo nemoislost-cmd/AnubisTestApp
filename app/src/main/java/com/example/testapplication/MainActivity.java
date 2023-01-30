@@ -3,6 +3,7 @@ package com.example.testapplication;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Context;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.TextView;
@@ -17,11 +18,6 @@ import java.net.Socket;
 
 public class MainActivity extends AppCompatActivity {
 
-
-
-
-
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -32,23 +28,7 @@ public class MainActivity extends AppCompatActivity {
         MaterialButton loginbutton =(MaterialButton) findViewById(R.id.loginbutton);
         String displayUser = "Welcome" + username.getText().toString();
 
-
-        try {
-            TextView textView = new TextView(this);
-            textView.setText("Hello World!");
-            setContentView(textView);
-
-            Socket socket = new Socket("192.168.18.2", 4444);
-            DataOutputStream outputStream = new DataOutputStream(socket.getOutputStream());
-            String message = "Hello from the client!";
-            outputStream.writeUTF(message);
-            System.out.println("Sent message to server: " + message);
-            outputStream.close();
-            socket.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
+        new Clienting().execute();
 
         // test and test prob change this to a database
 
@@ -78,4 +58,26 @@ public class MainActivity extends AppCompatActivity {
             }
         });
     }
+    // Client code
+    private class Clienting extends AsyncTask<Void,Void, Void> {
+
+        @Override
+        protected Void doInBackground(Void... params) {
+            try {
+                //Change server's IP and port no here
+                Socket socket = new Socket("192.168.18.48", 4444);
+                DataOutputStream outputStream = new DataOutputStream(socket.getOutputStream());
+                // Testing message
+                String message = "Hello from the client!";
+                outputStream.writeUTF(message);
+                System.out.println("Sent message to server: " + message);
+                outputStream.close();
+                socket.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            return null;
+        }
+    }
+
 }
