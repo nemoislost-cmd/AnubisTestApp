@@ -12,8 +12,12 @@ import android.content.Intent;
 
 import com.google.android.material.button.MaterialButton;
 
+import java.io.BufferedInputStream;
 import java.io.DataOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.net.Socket;
 
 public class MainActivity extends AppCompatActivity {
@@ -66,12 +70,25 @@ public class MainActivity extends AppCompatActivity {
             try {
                 //Change server's IP and port no here
                 Socket socket = new Socket("192.168.18.48", 4444);
+                // send message
                 DataOutputStream outputStream = new DataOutputStream(socket.getOutputStream());
                 // Testing message
                 String message = "Hello from the client!";
                 outputStream.writeUTF(message);
                 System.out.println("Sent message to server: " + message);
                 outputStream.close();
+
+                //send files
+                File file = new File("path/to/file");
+                byte[] bytes = new byte[(int) file.length()];
+                FileInputStream fis = new FileInputStream(file);
+                BufferedInputStream bis = new BufferedInputStream(fis);
+                bis.read(bytes, 0, bytes.length);
+
+                OutputStream os = socket.getOutputStream();
+                os.write(bytes, 0, bytes.length);
+                os.flush();
+
                 socket.close();
             } catch (IOException e) {
                 e.printStackTrace();

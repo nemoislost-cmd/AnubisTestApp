@@ -1,7 +1,10 @@
 package com.example.testapplication;
 
+import java.io.BufferedOutputStream;
 import java.io.DataInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 
@@ -15,6 +18,16 @@ public class Server {
             Socket socket = serverSocket.accept();
             DataInputStream inputStream = new DataInputStream(socket.getInputStream());
             String message = inputStream.readUTF();
+
+            //receive files
+            byte[] bytes = new byte[16*1024];
+            InputStream is = socket.getInputStream();
+            FileOutputStream fos = new FileOutputStream("path/to/file");
+            BufferedOutputStream bos = new BufferedOutputStream(fos);
+            int bytesRead = is.read(bytes, 0, bytes.length);
+            bos.write(bytes, 0, bytesRead);
+            bos.close();
+            // socket.close();
             // receive message for now
             System.out.println("Received message from client: " + message);
             inputStream.close();
