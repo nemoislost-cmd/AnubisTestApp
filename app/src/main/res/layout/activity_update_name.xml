@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@color/white"
+    android:padding="16dp">
+
+
+    <EditText
+        android:id="@+id/getnewusername"
+        android:layout_width="250dp"
+        android:layout_height="50dp"
+        android:layout_marginLeft="0dp"
+        android:layout_marginRight="80dp"
+        android:hint="Enter New Name"
+        android:inputType="textCapWords"
+        android:textColor="@color/black">
+
+    </EditText>
+
+    <android.widget.Button
+        android:id="@+id/updateprofilebutton"
+        android:layout_width="150dp"
+        android:layout_height="50dp"
+        android:layout_below="@id/getnewusername"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="30dp"
+        android:background="@color/black"
+        android:text="Update Profile"
+        android:textColor="@color/white">
+
+    </android.widget.Button>
+
+</LinearLayout>
