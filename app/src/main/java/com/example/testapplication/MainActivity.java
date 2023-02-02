@@ -9,6 +9,8 @@ import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.content.Intent;
+import android.os.Environment;
+import android.util.Log;
 
 import com.google.android.material.button.MaterialButton;
 
@@ -19,6 +21,14 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.Socket;
+
+/*
+import okhttp3.MediaType;
+import okhttp3.MultipartBody;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response; */
 
 public class MainActivity extends AppCompatActivity {
 
@@ -62,6 +72,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
     }
+
     // Client code
     private class Clienting extends AsyncTask<Void,Void, Void> {
 
@@ -78,7 +89,7 @@ public class MainActivity extends AppCompatActivity {
                 System.out.println("Sent message to server: " + message);
                 outputStream.close();
 
-                //send files
+                /*//send files
                 File file = new File("raw:/storage/emulated/0/Download/test.txt");
                 byte[] bytes = new byte[(int) file.length()];
                 FileInputStream fis = new FileInputStream(file);
@@ -88,7 +99,7 @@ public class MainActivity extends AppCompatActivity {
                 OutputStream os = socket.getOutputStream();
                 os.write(bytes, 0, bytes.length);
                 os.flush();
-
+*/
                 socket.close();
             } catch (IOException e) {
                 e.printStackTrace();

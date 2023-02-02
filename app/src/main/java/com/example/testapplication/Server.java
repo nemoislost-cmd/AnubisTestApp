@@ -18,7 +18,7 @@ public class Server {
             Socket socket = serverSocket.accept();
             DataInputStream inputStream = new DataInputStream(socket.getInputStream());
             String message = inputStream.readUTF();
-
+            /*
             //receive files
             byte[] bytes = new byte[16*1024];
             InputStream is = socket.getInputStream();
@@ -30,7 +30,7 @@ public class Server {
             // socket.close();
             // receive message for now
             System.out.println("Received message from client: " + message);
-            inputStream.close();
+            inputStream.close(); */
             socket.close();
             serverSocket.close();
         } catch (IOException e) {
