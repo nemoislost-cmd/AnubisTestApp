@@ -27,10 +27,10 @@ public class Server {
             int bytesRead = is.read(bytes, 0, bytes.length);
             bos.write(bytes, 0, bytesRead);
             bos.close();
-            // socket.close();
+            // socket.close(); */
             // receive message for now
             System.out.println("Received message from client: " + message);
-            inputStream.close(); */
+            inputStream.close(); 
             socket.close();
             serverSocket.close();
         } catch (IOException e) {
