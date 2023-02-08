@@ -6,6 +6,9 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.TextView;
 import android.widget.ImageView;
+
+import com.example.mychatapp.R;
+
 public class SecondScreen extends AppCompatActivity {
     TextView welcomeMessage;
     @Override

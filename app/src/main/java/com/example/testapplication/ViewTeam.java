@@ -1,18 +1,14 @@
 package com.example.testapplication;
 
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.compose.material.AlertDialogKt;
-import androidx.compose.ui.window.DialogWindowProvider;
-
-import android.content.Intent;
-import android.view.View;
-import android.widget.RelativeLayout;
 import android.app.AlertDialog;
-import android.content.DialogInterface;
+import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.os.Bundle;
-import android.view.WindowManager;
+import android.widget.RelativeLayout;
+
+import androidx.appcompat.app.AppCompatActivity;
+
+import com.example.mychatapp.R;
 
 public class ViewTeam extends AppCompatActivity {
 

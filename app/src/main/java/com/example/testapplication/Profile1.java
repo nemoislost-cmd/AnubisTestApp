@@ -4,6 +4,8 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.os.Bundle;
 
+import com.example.mychatapp.R;
+
 public class Profile1 extends AppCompatActivity {
 
     @Override
