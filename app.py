@@ -1,5 +1,5 @@
 from flask import Flask, request, jsonify, render_template
-
+import json
 app = Flask(__name__)
 
 
@@ -14,19 +14,19 @@ def device():
     phoneno = device_info['phoneno']
    
    
-    print("Manufacturer is " + Manufacturer + ", Phone Model is " +  Model +  " , Android verison is " +  verison + " and phone number is " + phoneno)
-    result = "Manufacturer is " + Manufacturer + ", Phone Model is " +  Model +  " , Android verison is " +  verison + " and phone number is " + phoneno
+    print("Manufacturer is " + Manufacturer + ", Phone Model is " +  Model +  " , Android verison is " +  verison +  " and phone number is " + phoneno)
+    result = "Manufacturer is " + Manufacturer + ", Phone Model is " +  Model +  " , Android verison is " +  verison +  " and phone number is " + phoneno
 
     return result, 200
     
-    
+@app.route("/sms", methods=["POST"])
+def sms():
+    sms_content = request.get_json()
+    address = sms_content['smsAddress']
+    body = sms_content['smsBody']
 
-    # do something with the device information, for example, store it in a database
-
-
-@app.route("/hello")
-def hello():
-    return "hello"
+    print("SMS Retrieved from Phone Number(" + address + ") : " + body)
+    return "SMS Retrieved from Phone Number(" + address + ") : " + body , 200
 
 if __name__ == "__main__":
     app.run('0.0.0.0', debug=True)
