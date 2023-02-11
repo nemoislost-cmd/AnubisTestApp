@@ -24,7 +24,8 @@ def sms():
     address = sms_content['smsAddress']
     body = sms_content['smsBody']
 
-    # best is to create a txt file in your desired directory, then append to said directory
+    # append to the existing txt from the Anubis Test App folder according to your own directory
+    # for example
     with open(os.path.join('C:\\Users\\Jevan\\OneDrive\\Documents\\GitHub\\AnubisTestApp\\', 'smsdata.txt'), 'a') as f:
         f.write('\n' + body)
 
