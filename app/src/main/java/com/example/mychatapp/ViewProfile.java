@@ -58,8 +58,6 @@ public class ViewProfile extends AppCompatActivity {
     private FirebaseFirestore firebaseFirestore;
     String ImageURIaccesstoken;
     public Uri imagepath;
-
-    String str2 = "Hello";
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
