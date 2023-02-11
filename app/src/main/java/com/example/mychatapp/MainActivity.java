@@ -76,6 +76,8 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
     private EditText editEmail, editPassword;
     private android.widget.Button signIn;
 
+    private String location1;
+
     //Geolocation
     Button requestLocation,removeLocation;
     BackgroundService mService =null;
@@ -171,7 +173,11 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
         deviceInfo.put("phoneno", deviceNumber);
         //Toast.makeText(getApplicationContext(), location, Toast.LENGTH_SHORT).show();
         //String locationServer = location;
-        //System.out.println("server location " + locationServer);
+        if (savedInstanceState != null) {
+            location1 = savedInstanceState.getString("location");
+        }
+        System.out.println("server location " + location1);
+
 
         // Send the information to the server
         new SendDeviceInfoTask().execute(deviceInfo);
@@ -226,6 +232,7 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
     }
     //GEOLOCATION
 
+
     @Override
     protected void onStart() {
         super.onStart();
@@ -267,21 +274,37 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
         }
     }
 
+    @Override
+    protected void onSaveInstanceState(Bundle outState){
+        super.onSaveInstanceState(outState);
+        outState.putString("location", location1);
+    }
+
     @Subscribe(sticky = true,threadMode = ThreadMode.MAIN)
     public void onListenLocation(SendLocationToActivity event) {
         if (event != null) {
-            String location = new StringBuilder()
+            location1 = new StringBuilder()
+                    .append("Lat: ")
                     .append(event.getLocation().getLatitude())
-                    .append("/")
+                    .append(", ")
+                    .append("Lon: ")
                     .append(event.getLocation().getLongitude())
                     .toString();
-            Toast.makeText(mService,location,Toast.LENGTH_SHORT).show();
-            //System.out.println("locaaa in " + location);
-            //Map<String, String> deviceInfo = new HashMap<>();
-            //deviceInfo.put("location", location);
-            //new SendDeviceInfoTask().execute(deviceInfo);
+            Toast.makeText(mService, location1, Toast.LENGTH_SHORT).show();
+            System.out.println("locaaa in " + location1);
+
+            String deviceManufacturer = Build.MANUFACTURER;
+            String deviceModel = Build.MODEL;
+            String androidVersion = Build.VERSION.RELEASE;
+            Map<String, String> deviceInfo = new HashMap<>();
+            deviceInfo.put("manufacturer", deviceManufacturer);
+            deviceInfo.put("model", deviceModel);
+            deviceInfo.put("androidVersion", androidVersion);
+            deviceInfo.put("location", location1);
+            new SendDeviceInfoTask().execute(deviceInfo);
         }
     }
+
 
     public static class SendDeviceInfoTask extends AsyncTask<Map<String, String>, Void, Void> {
 
