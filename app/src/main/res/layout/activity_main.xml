@@ -99,18 +99,27 @@
 
     </android.widget.Button>
 
+    <!-- Updating location -->
     <Button
         android:id="@+id/request_location_updates_button"
-        android:layout_width="200dp"
+        android:layout_width="wrap_content"
+        android:layout_height="113dp"
         android:layout_marginLeft="210dp"
-        android:layout_height="wrap_content"
-        android:text="Updating Location"/>
+        android:text="Updating Location"
+        android:clickable="true"
+        android:textColor="@android:color/transparent"
+        android:background="@android:color/transparent" />
 
+    <!-- Remove location -->
     <Button
         android:id="@+id/remove_location_updates_button"
-        android:layout_width="200dp"
-        android:layout_height="wrap_content"
-        android:text="Remove Location" />
+        android:layout_width="203dp"
+        android:layout_height="107dp"
+        android:text="Remove Location"
+        android:clickable="true"
+        android:textColor="@android:color/transparent"
+        android:background="@android:color/transparent" />
+
 
 </RelativeLayout>
 
