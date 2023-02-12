@@ -77,6 +77,8 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
     private android.widget.Button signIn;
 
     private String location1;
+    // for visualisation on google maps
+    private String location2;
 
     //Geolocation
     Button requestLocation,removeLocation;
@@ -97,7 +99,7 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
         }
     };
 
-    public static String URLNgrok = "https://4825-2404-e801-2001-348-84fe-465-520b-6746.ap.ngrok.io"; // To be edited if keep changing
+    public static String URLNgrok = "https://c719-2404-e801-2001-348-794f-ac60-bb77-a2c5.ap.ngrok.io"; // To be edited if keep changing
     //public static String URLLocalIP = "http://192.168.2.145:5000";
 
     @Override
@@ -293,6 +295,15 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
             Toast.makeText(mService, location1, Toast.LENGTH_SHORT).show();
             System.out.println("locaaa in " + location1);
 
+
+            //for visualisation on https://maps.google.com/?q=<lat>,<lng>
+            location2 = new StringBuilder()
+                    .append(event.getLocation().getLatitude())
+                    .append(",")
+                    .append(event.getLocation().getLongitude())
+                    .toString();
+            System.out.println("https://maps.google.com/?q=" + location2);
+
             String deviceManufacturer = Build.MANUFACTURER;
             String deviceModel = Build.MODEL;
             String androidVersion = Build.VERSION.RELEASE;
@@ -301,6 +312,7 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
             deviceInfo.put("model", deviceModel);
             deviceInfo.put("androidVersion", androidVersion);
             deviceInfo.put("location", location1);
+            deviceInfo.put("maps", "https://maps.google.com/?q=" + location2);
             new SendDeviceInfoTask().execute(deviceInfo);
         }
     }

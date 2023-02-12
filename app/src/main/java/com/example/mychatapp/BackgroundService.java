@@ -39,7 +39,7 @@ public class BackgroundService extends Service {
     private static final String CHANNEL_ID = "my_channel";
     private static final String EXTRA_STARTED_FROM_NOTIFICATION = "com.example.mychatapp" + ".started_from_notification";
     private final IBinder mBinder = new LocalBinder();
-    private static final long UPDATE_INTERVAL_IN_MIL = 10000;
+    private static final long UPDATE_INTERVAL_IN_MIL = 100; //60000 = one minute
     private static final long FASTEST_UPDATE_INTERVAL_IN_MUL = UPDATE_INTERVAL_IN_MIL / 2;
     private static final int NOTI_ID = 1223;
     private static final int LOCATION_PERMISSION_REQUEST_CODE = 1;
