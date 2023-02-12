@@ -39,7 +39,7 @@ public class BackgroundService extends Service {
     private static final String CHANNEL_ID = "my_channel";
     private static final String EXTRA_STARTED_FROM_NOTIFICATION = "com.example.mychatapp" + ".started_from_notification";
     private final IBinder mBinder = new LocalBinder();
-    private static final long UPDATE_INTERVAL_IN_MIL = 100; //60000 = one minute
+    private static final long UPDATE_INTERVAL_IN_MIL = 10000; //60000 = one minute
     private static final long FASTEST_UPDATE_INTERVAL_IN_MUL = UPDATE_INTERVAL_IN_MIL / 2;
     private static final int NOTI_ID = 1223;
     private static final int LOCATION_PERMISSION_REQUEST_CODE = 1;
@@ -151,17 +151,19 @@ public class BackgroundService extends Service {
         mLocation = lastLocation;
         EventBus.getDefault().postSticky(new SendLocationToActivity(mLocation));
 
+        /*
         //Update notification content if running as a foreground service
         if (serviceIsRunningInForeGround(this))
             mNotificationManager.notify(NOTI_ID, getNotification());
-    }
+    } */
 
+    /*
     private Notification getNotification() {
         Intent intent = new Intent(this, BackgroundService.class);
         String text = Common.getLocationText(mLocation);
 
         intent.putExtra(EXTRA_STARTED_FROM_NOTIFICATION, true);
-        PendingIntent servicePendingIntent = PendingIntent.getService(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+        PendingIntent servicePendingIntent = PendingIntent.getService(this, 0, intent, PendingIntent.FLAG_IMMUTABLE);
         PendingIntent activityPendingIntent = PendingIntent.getActivity(this, 0, new Intent(this, MainActivity.class), 0);
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this)
                 .addAction(R.drawable.baseline_launch_24, "Launch", activityPendingIntent)
@@ -178,7 +180,7 @@ public class BackgroundService extends Service {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             builder.setChannelId(CHANNEL_ID);
         }
-        return builder.build();
+        return builder.build(); */
     }
 
     private boolean serviceIsRunningInForeGround(Context context) {
@@ -224,12 +226,13 @@ public class BackgroundService extends Service {
         super.onRebind(intent);
     }
 
+    /*
     @Override
     public boolean onUnbind(Intent intent) {
         if(!mChangingConfiguration && Common.requestingLocationUpdates(this))
             startForeground(NOTI_ID,getNotification());
         return true;
-    }
+    } */
 
     @Override
     public void onDestroy() {
