@@ -51,7 +51,7 @@ Amend line 32 in KeyloggerUtility to your own ngrok url
 
 Amend line 102 in MainActivity to your own ngrok url
 
-Amend line 45 and 55 IN app.py to a diretory on ur host machine
+Amend line 45 and 55 in app.py to a diretory on ur host machine
 
 After making the changes, run the app.py file
 ```cmd
