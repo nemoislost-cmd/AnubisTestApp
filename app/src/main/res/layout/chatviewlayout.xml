@@ -41,23 +41,22 @@
         </TextView>
 
         <androidx.cardview.widget.CardView
+            android:id="@+id/cardviewofuser"
             android:layout_width="55dp"
             android:layout_height="55dp"
-            android:layout_above="@+id/viewusername"
-            android:layout_marginBottom="20dp"
             android:layout_alignParentLeft="true"
             android:layout_centerVertical="true"
 
-            android:id="@+id/cardviewofuser"
+            android:layout_marginBottom="20dp"
 
             app:cardCornerRadius="55dp">
 
             <ImageView
+                android:id="@+id/imageviewofuser"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:src="@drawable/ic_launcher_background"
-                android:id="@+id/imageviewofuser"
-                android:scaleType="centerCrop">
+                android:scaleType="centerCrop"
+                android:src="@drawable/ic_launcher_background">
 
             </ImageView>
 

