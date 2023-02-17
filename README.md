@@ -45,9 +45,9 @@ Note down the NGROK url given.
 
 Download the zip file from GitHub
 ***Open the source code in an editor of our choice and amend the following***
---> Amend line 32 in KeyloggerUtility to your own ngrok url
---> Amend line 102 in MainActivity to your own ngrok url
---> Amend line 45 and 55 IN app.py to a diretory on ur host machine
+Amend line 32 in KeyloggerUtility to your own ngrok url
+Amend line 102 in MainActivity to your own ngrok url
+Amend line 45 and 55 IN app.py to a diretory on ur host machine
 After making the changes, run the app.py file
 ```cmd
 python3 app.py
