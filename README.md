@@ -32,7 +32,7 @@ Anubis Chat is a POC of a malicious chat application that is able to conduct mal
 
 ## Installation
 
-Anubis Chat requires a minimum SDK of  21. This app has been tested on Google Pixel 4 and Pixel 4a emulators.
+Anubis Chat requires a minimum SDK of  21. This app has been tested on Google Pixel 4, Pixel 4a and Pixel 6 emulators.
 For the sending of remote data to server, attacker machine has to be configured with ngrok.
 
 To download and set up ngrok , visit the site here [https://ngrok.com/download]
