@@ -24,7 +24,7 @@ Anubis Chat is a POC of a malicious chat application that is able to conduct mal
 
 - [Python Flask] - Sending of data to remote server
 - [Java] - Anubis Chat 
-- [ngrok] - Enable sending of data through a public URL
+- [Ngrok] - Enable sending of data through a public URL
 - [Firebase] -  Authenticate users and store data related to the ap
 
 
@@ -32,7 +32,7 @@ Anubis Chat is a POC of a malicious chat application that is able to conduct mal
 
 ## Installation
 
-Anubis Chat  requires a minimum SDK of  21. This app has been tested on Pixel 4 and Pixel4a emulators.
+Anubis Chat requires a minimum SDK of  21. This app has been tested on Google Pixel 4 and Pixel 4a emulators.
 For the sending of remote data to server, attacker machine has to be configured with ngrok.
 
 To download and set up ngrok , visit the site here [https://ngrok.com/download]
